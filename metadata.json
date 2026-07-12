@@ -1,0 +1,6 @@
+{
+  "name": "Chai Point Feedback Responder",
+  "description": "A simple, single-page tool for café owners to generate warm, sincere responses to customer reviews.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      // Fix for environments or browser extensions (like MetaMask) that try to overwrite window.fetch or define it with getter-only
+      try {
+        // 1. Wrap Object.defineProperty to intercept and secure window.fetch definitions
+        const originalDefineProperty = Object.defineProperty;
+        Object.defineProperty = function(obj, prop, descriptor) {
+          try {
+            if (obj === window && prop === 'fetch' && descriptor) {
+              // If they are defining a getter but no setter, add a setter to prevent "only has getter" errors
+              if ('get' in descriptor && !('set' in descriptor)) {
+                const originalGet = descriptor.get;
+                let customFetch;
+                descriptor.set = function(val) {
+                  customFetch = val;
+                };
+                descriptor.get = function() {
+                  return customFetch !== undefined ? customFetch : originalGet.call(this);
+                };
+              }
+              // Force writable and configurable where applicable
+              if ('writable' in descriptor) {
+                descriptor.writable = true;
+              }
+              descriptor.configurable = true;
+            }
+          } catch (err) {
+            console.warn("Error in overridden Object.defineProperty for fetch:", err);
+          }
+          return originalDefineProperty(obj, prop, descriptor);
+        };
+
+        // 2. Wrap Object.defineProperties as well just in case they define multiple properties
+        const originalDefineProperties = Object.defineProperties;
+        Object.defineProperties = function(obj, props) {
+          try {
+            if (obj === window && props && props.fetch) {
+              const descriptor = props.fetch;
+              if ('get' in descriptor && !('set' in descriptor)) {
+                const originalGet = descriptor.get;
+                let customFetch;
+                descriptor.set = function(val) {
+                  customFetch = val;
+                };
+                descriptor.get = function() {
+                  return customFetch !== undefined ? customFetch : originalGet.call(this);
+                };
+              }
+              if ('writable' in descriptor) {
+                descriptor.writable = true;
+              }
+              descriptor.configurable = true;
+            }
+          } catch (err) {
+            console.warn("Error in overridden Object.defineProperties for fetch:", err);
+          }
+          return originalDefineProperties(obj, props);
+        };
+
+        // 3. Make the current window.fetch writable and configurable with both a getter and a setter
+        let currentFetch = window.fetch;
+        originalDefineProperty(window, 'fetch', {
+          get() {
+            return currentFetch;
+          },
+          set(val) {
+            currentFetch = val;
+          },
+          configurable: true,
+          enumerable: true
+        });
+      } catch (e) {
+        console.warn("Failed to configure robust window.fetch patch:", e);
+      }
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
